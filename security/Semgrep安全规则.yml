@@ -1,0 +1,7 @@
+rules:
+  - id: avoid-dangerous-eval
+    pattern: eval(...)
+    message: 禁止使用eval
+    severity: ERROR
+    languages:
+      - php
