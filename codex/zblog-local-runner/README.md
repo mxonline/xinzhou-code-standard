@@ -14,7 +14,7 @@ ChatGPT / v2.0 总控
 → 检查 Git / GitHub / Codex / PHP
 → 同步目标仓库和开发分支
 → codex exec（approval_policy=never + workspace-write）
-→ 本地 PHP / PHPUnit / 项目实机脚本 / HTTP 测试
+→ 本地 PHP / PHPUnit / 可信实机脚本 / HTTP 测试
 → 失败：把真实错误交给 Codex 修复并复测
 → 通过：Commit + Push
 → 等待 GitHub Actions
@@ -38,17 +38,18 @@ ChatGPT / v2.0 总控
 
 1. Runner 只处理 `config.json` 中显式允许的项目。
 2. 任务不能下发任意 Shell / PowerShell / PHP 命令。
-3. 测试命令只来自本机 `config.json` 和项目仓库中固定的 `tests/local-runner.ps1`。
-4. Codex 使用 `workspace-write`，不使用 `danger-full-access`。
-5. Codex 不负责 Git Push；Git / GitHub 操作由 Runner 固定逻辑执行。
-6. Runner 启动任务前要求工作树干净，避免覆盖人工未提交修改。
-7. 分支必须匹配本机配置的允许前缀。
-8. 不允许自动修改生产数据库、生产网站或 Z-Blog `zb_system` 核心。
-9. 本执行器面向本地测试站；线上部署仍属于单独的高风险阶段。
+3. PHP lint、PHPUnit、HTTP Smoke 由 Runner 固定逻辑执行；涉及数据库、Nginx、Hook 等扩展验证时，只调用本机配置指定的“可信测试脚本”。
+4. 可信测试脚本必须位于 Codex 可写工作树之外，Runner 会拒绝执行工作树内部的 PowerShell 实机脚本，避免通过测试脚本绕过沙箱。
+5. Codex 使用 `workspace-write`，不使用 `danger-full-access`。
+6. Codex 不负责 Git Push；Git / GitHub 操作由 Runner 固定逻辑执行。
+7. Runner 启动新任务前要求工作树干净，避免覆盖人工未提交修改；中断任务使用本地状态文件恢复。
+8. 分支必须匹配本机配置的允许前缀。
+9. 不允许自动修改生产数据库、生产网站或 Z-Blog `zb_system` 核心。
+10. 本执行器面向本地测试站；线上部署仍属于单独的高风险阶段。
 
 ## 文件
 
-- `runner.ps1`：主执行器。
+- `runner-v1.ps1`：正式主执行器。
 - `install.ps1`：首次安装、预检和 Windows 计划任务注册。
 - `config.example.json`：本机项目、测试、重试和 CI 配置示例。
 - `task.example.json`：ChatGPT 下发任务时使用的任务结构。
@@ -82,9 +83,10 @@ notepad .\config.json
 
 1. 检查 `git`、`gh`、`codex`、`php`。
 2. 检查 GitHub CLI 登录状态。
-3. 检查配置文件中的本地项目目录。
+3. 检查配置文件中的本地项目目录与 Git origin。
 4. 在 `~/.codex/config.toml` 中追加 `zblog_unattended` Profile（如果尚不存在）。
-5. 注册 `XinZhao ZBlog Local Runner` Windows 计划任务，每分钟运行一次 `runner.ps1 -Once`。
+5. 调用 `runner-v1.ps1 -Preflight` 做一次真实预检。
+6. 注册 `XinZhao ZBlog Local Runner` Windows 计划任务，每分钟运行一次 `runner-v1.ps1 -Once`。
 
 安装完成后不需要打开 Codex 桌面窗口。
 
@@ -134,13 +136,13 @@ Runner 按项目配置执行：
 
 1. PHP 全量语法检查（排除 vendor）。
 2. PHPUnit（存在且项目配置启用时）。
-3. `tests/local-runner.ps1`（存在时）。
+3. 本机可信测试脚本（配置时）。
 4. 本地站 HTTP Smoke Test（启用时）。
 5. Git diff / 状态检查。
 6. Commit / Push。
 7. GitHub Actions（启用时）。
 
-项目级数据库升级、Hook、真实访问写入、蜘蛛 UA、Referer 等实机测试应逐步沉淀到目标插件仓库的 `tests/local-runner.ps1`，由 Runner 固定调用，而不是通过远程任务传入命令。
+访问统计插件 2.0 所需的数据库升级、Hook 触发、真实访问写入、蜘蛛 UA、Referer、Nginx/PHP 日志等实机验证，应逐步沉淀到 `%USERPROFILE%\.xinzhou-zblog-runner\tests\xz_visit_stats.ps1` 之类的可信脚本，由 Runner 固定调用。该脚本位于插件工作树之外，Codex 只能根据测试结果修代码，不能修改测试规则本身。
 
 ## 自动修复
 
@@ -166,6 +168,10 @@ Push 后如果 GitHub Actions 失败：
 ```
 
 CI 自动修复次数由 `config.json` 控制。
+
+## 中断恢复
+
+Runner 会为正在处理的 Issue 保存本地状态文件。Windows 重启、计划任务中断或 Codex 进程异常退出后，只要 Issue 仍为打开状态，下一轮会识别同一个运行编号、分支和尝试次数，从当前真实工作树继续，而不是重新覆盖项目。
 
 ## 失败状态
 
