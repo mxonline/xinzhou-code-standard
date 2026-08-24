@@ -23,8 +23,8 @@
         "php_lint": true,
         "phpunit": true,
         "phpunit_required": false,
-        "project_script": "tests\\local-runner.ps1",
-        "project_script_required": false,
+        "trusted_test_script": "%USERPROFILE%\\.xinzhou-zblog-runner\\tests\\xz_visit_stats.ps1",
+        "trusted_test_script_required": false,
         "http_smoke": true,
         "site_url": "http://127.0.0.1",
         "http_timeout_sec": 20
