@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "run_id": "DEV-20260825-001",
+  "project": "xz_visit_stats",
+  "mode": "develop",
+  "target_branch": "feature/visit-stats-v2.0",
+  "objective": "开发访问统计插件 2.0 的第一批正式功能，并在本地 Z-Blog 测试站完成相关验证。",
+  "acceptance_criteria": [
+    "不修改 zb_system 核心文件",
+    "旧版访问记录保持可读",
+    "本次修改相关 PHP 语法检查通过",
+    "本地项目测试通过",
+    "GitHub CI 通过"
+  ],
+  "commit_message": "feat: start visit stats 2.0 core",
+  "auto_commit": true,
+  "auto_push": true
+}
