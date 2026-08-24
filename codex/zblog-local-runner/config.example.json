@@ -1,0 +1,42 @@
+{
+  "runner_id": "xzhao-win01",
+  "poll_limit": 10,
+  "max_local_attempts": 3,
+  "codex_profile": "zblog_unattended",
+  "task_title_prefix": "[LOCAL-RUNNER]",
+  "task_marker": "XINZHOU_LOCAL_RUNNER_TASK_V1",
+  "log_root": "%USERPROFILE%\\.xinzhou-zblog-runner\\logs",
+  "projects": [
+    {
+      "name": "xz_visit_stats",
+      "repo": "mxonline/zblogplugin-xz_visit_stats",
+      "worktree": "D:\\wwwroot\\xinzhao_net\\zb_users\\plugin\\xz_visit_stats",
+      "base_branch": "main",
+      "allowed_branch_prefixes": [
+        "feature/",
+        "fix/",
+        "test/",
+        "release/"
+      ],
+      "php_executable": "php",
+      "tests": {
+        "php_lint": true,
+        "phpunit": true,
+        "phpunit_required": false,
+        "project_script": "tests\\local-runner.ps1",
+        "project_script_required": false,
+        "http_smoke": true,
+        "site_url": "http://127.0.0.1",
+        "http_timeout_sec": 20
+      },
+      "ci": {
+        "enabled": true,
+        "required": true,
+        "discovery_timeout_sec": 180,
+        "completion_timeout_sec": 900,
+        "poll_interval_sec": 15,
+        "max_repair_attempts": 2
+      }
+    }
+  ]
+}
