@@ -6,6 +6,8 @@
 
 首选执行规范见：`zblog/Z-Blog-Codex工作区直接执行规范-v1.0.md`。
 
+完整流程完成判定强制遵循：`zblog/Z-Blog完整开发流程硬门禁-v1.0.md`。
+
 ## 固定职责
 
 - **ChatGPT：总控。** 恢复 Notion/GitHub 状态、分析用户需求或提出设计需求、生成/更新 PRD、确定技术边界与验收条件、判断风险、核验 Commit/CI/Release、回写 Notion。
@@ -52,10 +54,12 @@
 → CI失败则读取日志、Codex本机修复、复测、再次Push
 → 更新版本号和插件文档
 → PR / 合并准备
-→ Notion回写
-→ 发布 Dry Run
-→ Tag / GitHub Release / 正式ZIP
+→ Release Gate 判断
+→ Notion阶段回写
+→ 达到发布条件时执行发布 Dry Run
+→ Tag / GitHub Release / 正式ZIP（仅发布条件满足时）
 → 发布后文档和Notion最终回写
+→ 六项硬门禁检查
 → 输出真实完成状态
 ```
 
@@ -349,6 +353,39 @@ Dry Run通过后：
 
 当 Codex 已经直接拥有真实工作树和终端时，禁止为了“自动化”再机械增加一层 Runner。
 
+## 强制六项硬门禁
+
+每次声明“运行完整开发流程”时，结束前必须原样给出：
+
+```text
+FULL DEVELOPMENT FLOW GATE
+
+[1] Notion Context       PASS / BLOCKED
+    Evidence: ...
+[2] Codex Development    PASS / BLOCKED
+    Evidence: ...
+[3] Local Runtime        PASS / NOT REQUIRED / BLOCKED
+    Evidence: ...
+[4] GitHub CI            PASS / NOT REQUIRED / BLOCKED
+    Evidence: ...
+[5] Release Gate         PASS / NOT READY / BLOCKED
+    Evidence: ...
+[6] Notion Writeback     PASS / BLOCKED
+    Evidence: ...
+
+FINAL: COMPLETE / INCOMPLETE
+RELEASE: RELEASED / NOT RELEASED
+```
+
+判定规则：
+
+- 任意 Gate 为 `BLOCKED`，`FINAL` 必须为 `INCOMPLETE`；
+- 没有真实 Evidence 的 `PASS` 无效；
+- 本应实机验证时，CI 通过不能替代 Local Runtime PASS；
+- 中间 Phase 暂不发布时，Release Gate 必须为 `NOT READY` 并说明原因，不能省略；
+- Notion Context 与 Notion Writeback 都是硬门禁；
+- 只有 Tag、GitHub Release、正式 ZIP 已真实创建，才能写 `RELEASE: RELEASED`。
+
 ## 完成标准
 
 一次开发只有在这些状态都明确后才闭环：
@@ -359,5 +396,8 @@ Dry Run通过后：
 - 快速测试；
 - 必要本机实机测试；
 - Git/CI；
-- Notion；
-- 发布状态。
+- Release Gate；
+- Notion前置恢复与最终回写；
+- 六项硬门禁最终判定。
+
+完整规则以 `zblog/Z-Blog完整开发流程硬门禁-v1.0.md` 为准。
