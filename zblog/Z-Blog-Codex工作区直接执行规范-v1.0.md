@@ -179,3 +179,32 @@ scripts/local-verify.ps1
 ```
 
 缺少其中的必需证据时，只能标记为“开发中”“待实机验证”或“外部阻塞”，不能标记完成。
+
+## 强制六项硬门禁
+
+所有声明“运行完整开发流程”的任务，结束前必须按 `zblog/Z-Blog完整开发流程硬门禁-v1.0.md` 执行以下 Gate：
+
+```text
+FULL DEVELOPMENT FLOW GATE
+
+[1] Notion Context       PASS / BLOCKED
+[2] Codex Development    PASS / BLOCKED
+[3] Local Runtime        PASS / NOT REQUIRED / BLOCKED
+[4] GitHub CI            PASS / NOT REQUIRED / BLOCKED
+[5] Release Gate         PASS / NOT READY / BLOCKED
+[6] Notion Writeback     PASS / BLOCKED
+
+FINAL: COMPLETE / INCOMPLETE
+RELEASE: RELEASED / NOT RELEASED
+```
+
+强制规则：
+
+- 任意 Gate 为 `BLOCKED`，`FINAL` 必须是 `INCOMPLETE`；
+- 每个 `PASS` 必须附真实 Evidence；
+- CI 通过不能代替本应执行的 Local Runtime；
+- Release Gate 永远不能省略，中间 Phase 未达到发布条件时必须写 `NOT READY` 和原因；
+- Notion 前置恢复与最终回写都是硬门禁，不能因为代码/CI已完成而省略；
+- 只有正式 Tag、GitHub Release 和正式 ZIP 已真实创建，才能写 `RELEASE: RELEASED`。
+
+Codex/ChatGPT 不得在六项 Gate 输出之前使用“完整流程已完成”“全流程通过”等结论。
