@@ -38,7 +38,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 $configFull = (Resolve-Path -LiteralPath $ConfigPath).Path
-$runnerFull = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot 'runner.ps1')).Path
+$runnerFull = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot 'runner-v1.ps1')).Path
 
 # Keep the unattended policy in its own Codex profile instead of changing the global default.
 $codexDir = Join-Path $env:USERPROFILE '.codex'
