@@ -1,0 +1,60 @@
+name: ZBlog Local Runner Check
+
+on:
+  push:
+    paths:
+      - 'codex/zblog-local-runner/**'
+      - '.github/workflows/zblog-local-runner-check.yml'
+  pull_request:
+    paths:
+      - 'codex/zblog-local-runner/**'
+      - '.github/workflows/zblog-local-runner-check.yml'
+  workflow_dispatch:
+
+jobs:
+  powershell-syntax:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse PowerShell scripts
+        shell: powershell
+        run: |
+          $failed = $false
+          $files = @(
+            'codex/zblog-local-runner/runner-v1.ps1',
+            'codex/zblog-local-runner/install.ps1'
+          )
+          foreach ($file in $files) {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              (Resolve-Path $file),
+              [ref]$tokens,
+              [ref]$errors
+            ) | Out-Null
+            if ($errors.Count -gt 0) {
+              Write-Host "PowerShell parse errors in $file" -ForegroundColor Red
+              $errors | ForEach-Object { Write-Host $_.Message -ForegroundColor Red }
+              $failed = $true
+            } else {
+              Write-Host "PASS: $file"
+            }
+          }
+          if ($failed) { exit 1 }
+
+      - name: Validate JSON examples
+        shell: powershell
+        run: |
+          Get-Content 'codex/zblog-local-runner/config.example.json' -Raw | ConvertFrom-Json | Out-Null
+          Get-Content 'codex/zblog-local-runner/task.example.json' -Raw | ConvertFrom-Json | Out-Null
+          Write-Host 'PASS: JSON examples'
+
+      - name: Validate unattended profile guardrails
+        shell: powershell
+        run: |
+          $toml = Get-Content 'codex/zblog-local-runner/codex-config.example.toml' -Raw
+          if ($toml -notmatch 'approval_policy\s*=\s*"never"') { throw 'approval_policy=never missing' }
+          if ($toml -notmatch 'sandbox_mode\s*=\s*"workspace-write"') { throw 'workspace-write missing' }
+          if ($toml -match 'danger-full-access') { throw 'danger-full-access must not be enabled in runner profile' }
+          Write-Host 'PASS: Codex guardrails'
