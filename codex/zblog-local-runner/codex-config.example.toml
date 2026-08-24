@@ -1,0 +1,7 @@
+# 追加到 %USERPROFILE%\.codex\config.toml
+# 本 Profile 只用于 Z-Blog 本地无人值守 Runner。
+
+[profiles.zblog_unattended]
+approval_policy = "never"
+sandbox_mode = "workspace-write"
+model_reasoning_effort = "high"
