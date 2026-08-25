@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "description": "Default blocking and contextual terminology rules for Z-Blog plugin user-facing UI.",
+  "blocking_patterns": [
+    "字段\\s*\\d+",
+    "\\bDurationMs\\b",
+    "\\bPathKey\\b",
+    "\\bKeyset\\b",
+    "\\bOFFSET\\b",
+    "\\bcursor\\b",
+    "\\bmigration\\b",
+    "\\bbackfill\\b",
+    "\\bReferer\\b",
+    "\\bBrowser\\b",
+    "\\bDevice\\b",
+    "\\bCampaign\\b",
+    "\\bAI\\s+crawler\\b",
+    "规范化\\s*Path",
+    "下钻",
+    "\\bP(?:50|75|95)\\b"
+  ],
+  "contextual_terms": [
+    "RUM",
+    "LCP",
+    "INP",
+    "CLS",
+    "TTFB",
+    "FCP",
+    "Beacon",
+    "CIDR",
+    "Header",
+    "Path"
+  ],
+  "internal_enum_patterns": [
+    "\\bdirect\\b",
+    "\\bsearch\\b",
+    "\\bsocial\\b",
+    "\\bexternal\\b",
+    "\\binternal\\b",
+    "\\bdesktop\\b",
+    "\\bmobile\\b",
+    "\\btablet\\b"
+  ],
+  "default_excludes": [
+    "vendor/",
+    "node_modules/",
+    "tests/",
+    "test/",
+    "migrations/",
+    "docs/",
+    ".git/"
+  ],
+  "allow_marker": "ui-term:allow"
+}
