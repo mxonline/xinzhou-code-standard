@@ -1,0 +1,18 @@
+{
+  "contract_version": "global-runtime-v1",
+  "project": "XinZhao Video Factory",
+  "profile": "canonical-v1",
+  "bundles": [
+    {
+      "execution_id": "video-factory-v1-production-first",
+      "state": "runtime-contract/instances/video-factory-v1-production-first/state.json",
+      "events": "runtime-contract/instances/video-factory-v1-production-first/events.jsonl",
+      "evidence": "runtime-contract/instances/video-factory-v1-production-first/evidence/index.json"
+    }
+  ],
+  "projection_paths": [
+    "Notion:P5 Resume Gate",
+    "Notion:GPT HANDOFF Status Index"
+  ],
+  "executor_autowrite_verified": false
+}
