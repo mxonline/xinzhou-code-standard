@@ -178,23 +178,36 @@ def _validate_arthur(
             previous_hash = event_hash
 
     gates = state.get("gates")
-    if not isinstance(gates, list):
-        _conflict(conflicts, "ARTHUR_GATES_INVALID")
-    else:
+    gate_items: list[tuple[str | None, dict[str, Any]]] = []
+    if isinstance(gates, dict):
+        for gate_key, gate in gates.items():
+            if not isinstance(gate, dict):
+                _conflict(conflicts, f"ARTHUR_GATE_NOT_OBJECT:{gate_key}")
+                continue
+            gate_items.append((str(gate_key), gate))
+    elif isinstance(gates, list):
         for gate in gates:
             if not isinstance(gate, dict):
+                _conflict(conflicts, "ARTHUR_GATE_NOT_OBJECT")
                 continue
-            gate_id = str(gate.get("gate_id", "UNKNOWN"))
-            status = gate.get("status")
-            refs = gate.get("evidence_refs", [])
-            if status in ACCEPTED_GATE_STATUSES:
-                if not isinstance(refs, list) or not refs:
-                    _conflict(conflicts, f"GATE_EVIDENCE_REQUIRED:{gate_id}")
-                else:
-                    normalized = [ref.split(":", 1)[1] for ref in refs if isinstance(ref, str) and ref.startswith("evidence:")]
-                    if len(normalized) != len(refs):
-                        _conflict(conflicts, f"GATE_EVIDENCE_REF_INVALID:{gate_id}")
-                    _check_refs(normalized, ids, conflicts)
+            gate_items.append((None, gate))
+    else:
+        _conflict(conflicts, "ARTHUR_GATES_INVALID")
+
+    for gate_key, gate in gate_items:
+        gate_id = str(gate.get("gate_id", "UNKNOWN"))
+        if gate_key is not None and gate_key != gate_id:
+            _conflict(conflicts, f"ARTHUR_GATE_KEY_ID_MISMATCH:{gate_key}:{gate_id}")
+        status = gate.get("status")
+        refs = gate.get("evidence_refs", [])
+        if status in ACCEPTED_GATE_STATUSES:
+            if not isinstance(refs, list) or not refs:
+                _conflict(conflicts, f"GATE_EVIDENCE_REQUIRED:{gate_id}")
+            else:
+                normalized = [ref.split(":", 1)[1] for ref in refs if isinstance(ref, str) and ref.startswith("evidence:")]
+                if len(normalized) != len(refs):
+                    _conflict(conflicts, f"GATE_EVIDENCE_REF_INVALID:{gate_id}")
+                _check_refs(normalized, ids, conflicts)
 
     return {"valid": not conflicts, "profile": "arthur-v2", "execution_id": expected_execution_id, "conflicts": conflicts}
 

@@ -144,6 +144,26 @@ class RuntimeContractTests(unittest.TestCase):
         result = runtime.validate_bundle("arthur-v2", self.arthur_state(), self.arthur_events(), self.arthur_evidence(), "arthur-run-001")
         self.assertTrue(result["valid"], result["conflicts"])
 
+    def test_arthur_real_gate_object_mapping_is_supported(self):
+        runtime = load_module()
+        state = self.arthur_state()
+        state["gates"] = {
+            "BUILD": {"gate_id": "BUILD", "status": "PASS", "evidence_refs": ["evidence:build-1"]},
+            "PRE_FLASH": {"gate_id": "PRE_FLASH", "status": "PENDING", "evidence_refs": []},
+        }
+        result = runtime.validate_bundle("arthur-v2", state, self.arthur_events(), self.arthur_evidence(), "arthur-run-001")
+        self.assertTrue(result["valid"], result["conflicts"])
+
+    def test_arthur_gate_object_key_must_match_gate_id(self):
+        runtime = load_module()
+        state = self.arthur_state()
+        state["gates"] = {
+            "WRONG_KEY": {"gate_id": "BUILD", "status": "PASS", "evidence_refs": ["evidence:build-1"]}
+        }
+        result = runtime.validate_bundle("arthur-v2", state, self.arthur_events(), self.arthur_evidence(), "arthur-run-001")
+        self.assertFalse(result["valid"])
+        self.assertIn("ARTHUR_GATE_KEY_ID_MISMATCH:WRONG_KEY:BUILD", result["conflicts"])
+
     def test_arthur_hash_link_and_pass_evidence_are_enforced(self):
         runtime = load_module()
         events = self.arthur_events()
