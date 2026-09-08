@@ -8,13 +8,16 @@
 
 完整流程完成判定强制遵循：`zblog/Z-Blog完整开发流程硬门禁-v1.0.md`。
 
+无人值守开发的机器恢复状态遵循：`zblog/Z-Blog无人值守开发Runtime-State-v1.0.md`。
+
 ## 固定职责
 
 - **ChatGPT：总控。** 恢复 Notion/GitHub 状态、分析用户需求或提出设计需求、生成/更新 PRD、确定技术边界与验收条件、判断风险、核验 Commit/CI/Release、回写 Notion。
 - **Codex 工作区：真实执行。** 直接读取真实 Git 工作树和终端，修改源码、运行 PHP/测试、本机 Z-Blog/数据库/Nginx 验证、读取日志、失败自动修复、Commit/Push、处理 CI。
+- **Canonical Runtime：机器恢复执行位置。** 以同一 `DEV-YYYYMMDD-NNN` 绑定 `state + events + evidence`，负责中断恢复、revision、Gate evidence 和 next action；不得制造 Git/CI/实机/Release/Notion 事实。
 - **GitHub：代码事实来源。** 分支、Commit、PR、CI、Tag、Release 以 GitHub 和真实工作树为准。
-- **Notion：长期项目状态。** 保存 PRD、关键技术决策、数据库/Hook变化、复杂故障、测试结论、发布记录。
-- **Local Runner：可选辅助。** 只有在没有持续可用的 Codex 工作区、需要远程触发/定时批处理时使用；不再作为主开发链路。
+- **Notion：长期项目状态。** 保存 PRD、关键技术决策、数据库/Hook变化、复杂故障、测试结论、发布记录和人类可读阶段投影。
+- **Local Runner：可选辅助。** 只有在没有持续可用的 Codex 工作区、需要远程触发/定时批处理时使用；不再作为主开发链路，也不得另建与 Canonical Runtime 竞争的状态机。
 
 ## 一句话触发
 
@@ -34,10 +37,12 @@
 ```text
 用户提出需求 / ChatGPT提出设计需求
 → 生成或恢复运行编号
+→ 创建或加载 Canonical Runtime Bundle
+→ 校验 state / events / evidence
 → 识别项目与任务类型
 → 读取 Notion 项目记录和开发规范
 → 读取 GitHub / 真实源码状态
-→ 确认当前版本、分支、工作树和本机环境
+→ reconcile 当前版本、分支、工作树和 head SHA
 → 判断需求范围与风险
 → 更新 PRD / 验收条件
 → 确认 Hook、数据库、兼容方案和影响范围
@@ -50,7 +55,7 @@
 → 按风险执行安全 / 性能 / 兼容检查
 → 检查 Diff / 敏感信息
 → Commit / Push 开发分支
-→ GitHub CI
+→ GitHub CI（必须绑定当前 head SHA）
 → CI失败则读取日志、Codex本机修复、复测、再次Push
 → 更新版本号和插件文档
 → PR / 合并准备
@@ -60,6 +65,7 @@
 → Tag / GitHub Release / 正式ZIP（仅发布条件满足时）
 → 发布后文档和Notion最终回写
 → 六项硬门禁检查
+→ Runtime 完成判定
 → 输出真实完成状态
 ```
 
@@ -71,9 +77,19 @@
 DEV-YYYYMMDD-NNN
 ```
 
-运行编号至少关联：项目、当前版本、目标版本、任务类型、当前阶段、Notion项目页/PRD、GitHub仓库、开发分支、最新Commit、CI状态、实机验证状态、发布状态和阻塞项。
-
 同一任务中断后恢复使用原运行编号。
+
+支持无人值守恢复的项目应将该编号绑定到同一逻辑 Runtime Bundle：
+
+```text
+<runtime-root>/<execution_id>/state.json
+<runtime-root>/<execution_id>/events.jsonl
+<runtime-root>/<execution_id>/evidence/index.json
+```
+
+项目可自定 `<runtime-root>`，推荐 `.development/runtime`；合同语义以 `Z-Blog无人值守开发Runtime-State-v1.0.md` 为准，不要求所有项目复制同一实现脚本。
+
+运行编号至少关联：项目、当前版本、目标版本、任务类型、当前阶段、Notion项目页/PRD、GitHub仓库、开发分支、最新Commit、CI状态、实机验证状态、发布状态和阻塞项。
 
 统一状态：
 
@@ -92,34 +108,39 @@ CI验证中
 已取消
 ```
 
-状态只能来自真实执行结果。
+状态只能来自真实执行结果。Runtime State 只记录已经接受的执行判断；真实 Git、精确 SHA 的 CI、本机实机结果、Release 和 Notion 工具结果与 state 冲突时，必须先 reconcile/verify，不能用状态文字覆盖事实。
 
 ## 阶段 0：恢复上下文
 
-读取顺序：
+恢复时先加载并验证原运行编号的 Runtime Bundle，再读取外部事实：
 
-1. Notion 对应项目页和 PRD；
-2. Z-Blog 开发规范；
-3. GitHub 当前仓库、默认/目标分支和真实源码；
-4. 必要时读取 Issue、PR、Actions、Release、CHANGELOG；
-5. 当前聊天最新明确要求优先。
+1. Runtime `state / events / evidence`；
+2. Git 当前分支、head SHA、工作树；
+3. Notion 对应项目页和 PRD；
+4. Z-Blog 开发规范；
+5. GitHub 当前仓库、PR、Actions、Release 等真实状态；
+6. 当前聊天最新明确要求。
 
-Notion 与 GitHub 不一致时，以真实代码和最新明确决定为准，并修正长期记录。
+Runtime 缺失时显式 bootstrap；identity/revision/evidence/Gate 冲突时进入 `VERIFY_RUNTIME_STATE`；Git/CI 已漂移时先 reconcile 或重新验证 CI。
+
+Notion、Runtime 与 GitHub 不一致时，代码与真实外部证据优先，并修正长期记录和 Runtime projection。
 
 ## 中断恢复
 
-换聊天、Codex中断或开发暂停后：
+换聊天、Codex中断、Windows重启或开发暂停后：
 
 ```text
-读取 Notion 当前状态
-→ 恢复原运行编号
+读取原 DEV 运行编号 Runtime Bundle
+→ 校验 state_revision / events seq / evidence refs
 → 读取 GitHub 当前分支 / Commit / PR / CI
 → Codex读取真实工作树状态
-→ 对比未完成任务
-→ 从真实断点继续
+→ 确认 CI 是否仍绑定当前 head SHA
+→ 读取 Notion 当前 PRD / 长期状态
+→ 对比未完成 Gate / next action
+→ 从上次真实断点继续
 ```
 
-不得要求用户重新描述已经记录的完整需求，不重复已完成动作。
+不得要求用户重新描述已经记录的完整需求，不重复已完成动作，不为同一中断任务重新创建运行编号。
 
 ## 阶段 1：任务分类
 
@@ -158,7 +179,7 @@ Notion 与 GitHub 不一致时，以真实代码和最新明确决定为准，�
 
 ChatGPT 输出的任务应让 Codex 在**当前真实工作区**直接执行，不要求用户复制到另一个中间 Runner。
 
-Codex 进入仓库后必须优先读取项目 `AGENTS.md` 和真实当前状态。
+Codex 进入仓库后必须优先读取项目 `AGENTS.md`、原 DEV Runtime 和真实当前状态。
 
 ## 阶段 4：Codex 直接开发
 
@@ -172,7 +193,7 @@ Codex 进入仓库后必须优先读取项目 `AGENTS.md` 和真实当前状态�
 - 数据库升级兼容旧数据；
 - 普通可逆开发动作不逐项询问用户。
 
-只有真实工作树发生修改并有可验证结果时，才叫“已执行”。
+只有真实工作树发生修改并有可验证结果时，才叫“已执行”。接受一个开发 checkpoint 时同步更新 Runtime revision/event/evidence。
 
 ## 阶段 5：快速自动测试
 
@@ -192,6 +213,7 @@ Codex 进入仓库后必须优先读取项目 `AGENTS.md` 和真实当前状态�
 → 定位原因
 → 修改
 → 重跑相关测试
+→ 写入真实测试 evidence
 ```
 
 PHPStan、Semgrep、完整 PHPUnit 套件按项目和风险使用，不作为所有小修改的固定阻断门槛。
@@ -224,6 +246,8 @@ CI通过不能替代必须的实机验收。
 
 项目应提供统一入口（例如 `scripts/local-verify.ps1`）和 `docs/TESTING.md`，让 Codex 在同一终端连续开发、验证、修复。
 
+Runtime 只能保存真实实机结果的 evidence ref，不能自行制造 Local Runtime PASS。
+
 ## 阶段 7：风险驱动检查
 
 - SQL/权限/上传/外部请求：加强安全检查；
@@ -240,9 +264,11 @@ CI通过不能替代必须的实机验收。
 2. 更新必要版本/CHANGELOG；
 3. Commit；
 4. Push 开发分支；
-5. CI；
-6. CI失败则读取日志、本机修复、复测、再次Push；
-7. 达到发布条件后进入 PR/合并/Release。
+5. 更新 Runtime `head_sha` 并使旧 CI checkpoint 失效；
+6. CI；
+7. CI PASS 只在 evidence 与当前 `head_sha` 精确一致时可复用；
+8. CI失败则读取日志、本机修复、复测、再次Push；
+9. 达到发布条件后进入 PR/合并/Release。
 
 普通开发分支 Commit/Push 不需要用户逐项确认。
 
@@ -250,15 +276,16 @@ CI通过不能替代必须的实机验收。
 
 同步：
 
-- 运行编号与状态；
+- 运行编号与人类可读状态；
 - PRD变化；
 - 数据库/Hook/重要架构；
 - 复杂故障；
 - 本机实机测试；
 - Commit/PR/CI/Release；
+- Release Gate；
 - 下一版本待办。
 
-不复制普通代码 Diff。
+Notion 是长期项目与人类控制面，不替代 Runtime 的机器执行位置，也不复制普通代码 Diff。
 
 ## 阶段 10：插件文档
 
@@ -318,12 +345,15 @@ Dry Run通过后：
 
 在能够访问仓库和终端的 Codex 工作区中，普通开发默认连续执行，不反复要求用户确认。
 
+Runtime evaluator 只负责恢复/路由，不替代 Codex。不得为了“无人值守”再新增一套 Scheduler 或第四个持久化服务。
+
 只在以下情况暂停：
 
 - 缺少关键凭据/权限；
 - 当前环境无法访问必须资源；
 - 涉及生产数据/生产部署/不可逆操作；
-- 需求存在会导致高风险错误的重大歧义。
+- 需求存在会导致高风险错误的重大歧义；
+- Runtime 与真实事实冲突且无法自动安全 reconcile。
 
 ## 状态真实性
 
@@ -333,7 +363,7 @@ Dry Run通过后：
 - **已规划**：只有计划/PRD/命令；
 - **外部阻塞**：当前环境无法完成。
 
-生成提示词、脚本或计划不等于已经在 Codex、本机或 GitHub执行。
+生成提示词、脚本、Runtime state 或计划本身都不等于已经在 Codex、本机或 GitHub执行。
 
 ## 快速通道
 
@@ -351,7 +381,7 @@ Dry Run通过后：
 
 已有 `codex/zblog-local-runner` 保留为可选辅助工具，不再是本流程默认架构。只有远程触发、定时批处理或没有持续Codex工作区时才考虑使用。
 
-当 Codex 已经直接拥有真实工作树和终端时，禁止为了“自动化”再机械增加一层 Runner。
+当 Codex 已经直接拥有真实工作树和终端时，禁止为了“自动化”再机械增加一层 Runner。Local Runner 如参与，也应消费同一 Canonical Runtime contract，而不是维护另一份执行状态。
 
 ## 强制六项硬门禁
 
@@ -381,7 +411,9 @@ RELEASE: RELEASED / NOT RELEASED
 
 - 任意 Gate 为 `BLOCKED`，`FINAL` 必须为 `INCOMPLETE`；
 - 没有真实 Evidence 的 `PASS` 无效；
+- Runtime 中的 `evidence:<id>` 必须能解析到同一 execution 的 evidence index；
 - 本应实机验证时，CI 通过不能替代 Local Runtime PASS；
+- GitHub CI PASS 必须绑定当前目标 head SHA；
 - 中间 Phase 暂不发布时，Release Gate 必须为 `NOT READY` 并说明原因，不能省略；
 - Notion Context 与 Notion Writeback 都是硬门禁；
 - 只有 Tag、GitHub Release、正式 ZIP 已真实创建，才能写 `RELEASE: RELEASED`。
@@ -391,6 +423,7 @@ RELEASE: RELEASED / NOT RELEASED
 一次开发只有在这些状态都明确后才闭环：
 
 - 运行编号；
+- 可验证 Runtime state/events/evidence；
 - 需求/PRD；
 - 真实代码状态；
 - 快速测试；

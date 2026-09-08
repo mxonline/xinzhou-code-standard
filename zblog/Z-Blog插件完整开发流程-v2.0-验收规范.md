@@ -4,6 +4,8 @@
 
 目标：用户只提出需求后，流程能够自动恢复上下文、调用可用工具、推进开发、处理失败、恢复中断、完成发布准备，并且全程区分“已执行 / 已规划 / 外部待执行”。
 
+无人值守机器恢复状态的验收同时遵循 `zblog/Z-Blog无人值守开发Runtime-State-v1.0.md`。
+
 ## 1. 验收原则
 
 验收分为五类：
@@ -16,7 +18,7 @@
 
 所有验收都必须保留可验证证据，例如 Notion 页面、GitHub 文件、Commit、CI 状态、日志、测试输出或发布包清单。
 
-禁止以“已生成命令、已生成提示词、已写计划”代替真实执行结果。
+禁止以“已生成命令、已生成提示词、已写计划、已写 Runtime 状态”代替真实执行结果。
 
 ## 2. 运行编号规范
 
@@ -51,6 +53,29 @@ DEV-20260824-001
 
 只有用户提出全新独立开发任务时才创建新的运行编号。
 
+## 2.1 Runtime Bundle 验收
+
+支持无人值守恢复的项目必须为同一 `DEV-YYYYMMDD-NNN` 提供等价的：
+
+```text
+state.json
+events.jsonl
+evidence/index.json
+```
+
+验收点：
+
+- `state.json` 有 `execution_id`、`state_revision`、`branch`、`head_sha`、六 Gate 和 `next_action`；
+- `events.jsonl` append-only，`seq` 单调递增；
+- `evidence/index.json` 与同一 execution 绑定；
+- Runtime 中所有 `evidence:<id>` 可解析；
+- 同一任务冷恢复不重新生成 run id；
+- Git/CI 与 Runtime 冲突时 fail closed，而不是继续执行；
+- GitHub CI PASS 只能在 exact-head SHA 一致时复用；
+- 旧聊天记忆、旧 Runner 状态或历史 `.codex-state.json` 不能单独覆盖 Canonical Runtime。
+
+项目可以用不同语言和路径实现，不要求复制某个参考仓库的具体脚本。
+
 ## 3. 状态机
 
 每轮运行至少使用以下状态之一：
@@ -77,9 +102,12 @@ CI验证中
 检查主流程是否覆盖：
 
 - 自动触发
+- Canonical Runtime / DEV run
+- Runtime state/events/evidence
 - Notion 项目恢复
 - GitHub / 真实代码读取
 - 当前版本 / 分支确认
+- exact-head CI reconciliation
 - 需求分类
 - 快速通道
 - PRD 更新
@@ -112,9 +140,10 @@ CI验证中
 ```text
 识别项目
 → 生成运行编号
+→ bootstrap Canonical Runtime
 → 自动读取 Notion
 → 自动读取 GitHub / 真实代码
-→ 确认当前版本
+→ 确认当前版本 / branch / head SHA
 → 判断任务规模和风险
 → 自动推进后续流程
 ```
@@ -124,6 +153,7 @@ CI验证中
 - 要求用户重复已经存在的项目信息
 - 在正常流程中询问“是否继续”“要不要下一步”
 - 未读取真实项目状态就直接给开发方案
+- 创建了 Run 但没有持久化可恢复 state/events/evidence
 
 ## 6. 快速通道验收
 
@@ -150,6 +180,8 @@ CI验证中
 
 必须验证：
 
+- 原运行编号或新运行编号明确
+- Runtime Bundle 可冷恢复
 - Notion 项目状态恢复成功
 - GitHub 真实源码读取成功
 - PRD 更新成功
@@ -159,8 +191,9 @@ CI验证中
 - 自动测试真实运行
 - 失败时自动修复
 - Git Commit 可验证
-- CI 可验证
+- CI 可验证且与当前 head SHA 精确一致
 - Notion 回写可验证
+- state revision / events / evidence 与真实 checkpoint 一致
 
 流程不得依赖用户逐步发送“下一步”。
 
@@ -168,7 +201,7 @@ CI验证中
 
 ### 测试方法
 
-在开发进行到任意中间阶段时结束当前聊天或换新聊天。
+在开发进行到任意中间阶段时结束当前聊天、换新聊天、重启 Codex 或重启开发环境。
 
 用户只输入：
 
@@ -179,11 +212,12 @@ CI验证中
 ### 预期恢复顺序
 
 ```text
-读取 Notion 当前状态
-→ 读取已有运行编号
-→ 读取 GitHub 当前分支
-→ 读取最新 Commit / PR / CI
-→ 对比未完成任务
+读取原运行编号 Runtime Bundle
+→ 校验 state_revision / event seq / evidence refs
+→ 读取 GitHub 当前分支 / Commit / PR / CI
+→ reconcile 当前 head SHA 与 CI evidence
+→ 读取 Notion 当前状态 / PRD
+→ 对比未完成 Gate / next action
 → 从上次真实断点继续
 ```
 
@@ -194,8 +228,10 @@ CI验证中
 - 不重复已经完成的开发动作
 - 不丢失原运行编号
 - 可以准确指出“已完成 / 未完成 / 当前阻塞”
+- stale CI 不会被误复用
+- Runtime 与真实 Git 冲突时不会猜测继续
 
-如果无法恢复本机 Codex 工作树，必须明确标为“外部待执行”，但仍应恢复 Notion 与 GitHub 可见状态。
+如果无法恢复本机 Codex 工作树，必须明确标为“外部待执行”或 BLOCKED，但仍应恢复 Runtime、Notion 与 GitHub 可见状态。
 
 ## 9. 故障恢复测试
 
@@ -206,6 +242,7 @@ CI验证中
 - PHP 语法错误
 - 单元测试断言失败
 - CI 配置中的可恢复测试失败
+- Runtime 中记录一个旧 head SHA，验证 reconciliation
 
 禁止在生产数据库或生产文件中故意制造故障。
 
@@ -213,13 +250,13 @@ CI验证中
 
 ```text
 检测失败
-→ 自动读取错误日志 / CI 日志
+→ 自动读取错误日志 / CI 日志 / Runtime conflict
 → 定位原因
-→ 修改代码
+→ 修改代码或 reconcile state
 → 重跑相关测试
 → Commit
-→ 再次验证 CI
-→ 更新运行状态与 Notion
+→ 再次验证当前 head CI
+→ 更新 evidence / event / state revision / Notion
 ```
 
 ### 失败条件
@@ -228,6 +265,8 @@ CI验证中
 - 没有读取日志就猜测原因
 - 修复后不复测
 - 把尚未修复的状态标记为通过
+- 新 Commit 后继续复用旧 SHA 的 CI PASS
+- Runtime evidence 不可解析却继续推进
 
 ## 10. 发布 Dry Run
 
@@ -274,6 +313,7 @@ Dry Run 输出必须给出：
 目标版本：
 分支：
 最新 Commit：
+Runtime revision：
 CI：
 Notion：
 测试：
@@ -290,6 +330,7 @@ Notion：
 
 - 自动触发
 - 上下文恢复
+- Runtime 持久化与证据一致性
 - 真实代码读取
 - 任务分类
 - PRD / 影响分析
@@ -304,16 +345,16 @@ Notion：
 - 开发效率
 - 高风险保护
 
-总分 30 分。
+总分 32 分。
 
 评级：
 
-- 27-30：稳定，可作为默认流程
-- 23-26：可用，但需修补
-- 18-22：流程存在明显断点
-- 0-17：不应作为默认自动开发流程
+- 29-32：稳定，可作为默认流程
+- 25-28：可用，但需修补
+- 20-24：流程存在明显断点
+- 0-19：不应作为默认自动开发流程
 
-其中“状态真实性”“高风险保护”“中断恢复”任一为 0 分，即使总分达标也不得评为稳定。
+其中“状态真实性”“高风险保护”“中断恢复”“Runtime 持久化与证据一致性”任一为 0 分，即使总分达标也不得评为稳定。
 
 ## 13. v2.0 最终验收矩阵
 
