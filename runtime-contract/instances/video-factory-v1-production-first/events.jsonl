@@ -1,0 +1,4 @@
+{"seq":1,"execution_id":"video-factory-v1-production-first","state_revision":1,"event":"RUNTIME_BOOTSTRAPPED","time":"2026-09-09","data":{"source":"v1.0 Production-First Architecture Baseline"}}
+{"seq":2,"execution_id":"video-factory-v1-production-first","state_revision":1,"event":"SSOT_RECONCILED","time":"2026-09-09","data":{"existing_runtime_baseline":"ACCEPTED","p1_p6_design":"ACCEPTED","video_status":"RC"}}
+{"seq":3,"execution_id":"video-factory-v1-production-first","state_revision":1,"event":"HANDOFF_PROJECTION_BOUND","time":"2026-09-09","data":{"handoff":"P5 Resume Gate / HANDOFF status index","next_action":"RUN_GOLDEN_CASE_E2E_REGRESSION"}}
+{"seq":4,"execution_id":"video-factory-v1-production-first","state_revision":2,"event":"COLD_RECOVERY_VERIFIED","time":"2026-09-09","data":{"recovery_test":"https://app.notion.com/p/3d5887d3643281bfae09c4bc4604b774?pvs=204","result":"PASS","next_action":"RUN_GOLDEN_CASE_E2E_REGRESSION","production_gate_advanced":false}}

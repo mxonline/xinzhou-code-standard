@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "execution_id": "video-factory-v1-production-first",
+  "items": [
+    {
+      "id": "architecture-baseline",
+      "execution_id": "video-factory-v1-production-first",
+      "type": "notion_ssot",
+      "result": "ACCEPTED",
+      "ref": "https://app.notion.com/p/3cc887d364328131a2c1ed96ab908a49?pvs=204",
+      "observed_at": "2026-09-09"
+    },
+    {
+      "id": "resume-gate-p5",
+      "execution_id": "video-factory-v1-production-first",
+      "type": "notion_contract",
+      "result": "ACCEPTED",
+      "ref": "https://app.notion.com/p/3cc887d3643281c0a526e252248aa784?pvs=204",
+      "observed_at": "2026-09-09"
+    },
+    {
+      "id": "release-gate-p6",
+      "execution_id": "video-factory-v1-production-first",
+      "type": "notion_contract",
+      "result": "ACCEPTED",
+      "ref": "https://app.notion.com/p/3cc887d364328122ab1dcfdbb567771c?pvs=204",
+      "observed_at": "2026-09-09"
+    },
+    {
+      "id": "handoff-index",
+      "execution_id": "video-factory-v1-production-first",
+      "type": "notion_projection",
+      "result": "ACCEPTED",
+      "ref": "https://app.notion.com/p/3ce887d36432812182a3c67062a668cf?pvs=204",
+      "observed_at": "2026-09-09"
+    },
+    {
+      "id": "cold-recovery-run-07",
+      "execution_id": "video-factory-v1-production-first",
+      "type": "runtime_recovery_test",
+      "result": "PASS",
+      "ref": "https://app.notion.com/p/3d5887d3643281bfae09c4bc4604b774?pvs=204",
+      "observed_at": "2026-09-09"
+    }
+  ]
+}
