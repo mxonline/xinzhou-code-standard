@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "execution_id": "video-factory-v1-production-first",
+  "state_revision": 2,
+  "status": "IN_PROGRESS",
+  "runtime_contract_status": "VERIFIED",
+  "runtime_contract_evidence_ref": "evidence:cold-recovery-run-07",
+  "current_stage": "GOLDEN_CASE_E2E_REGRESSION",
+  "last_verified_stage": "EXISTING_RUNTIME_BASELINE",
+  "video_status": "RC",
+  "accepted_baselines": [
+    "v1.0 Production-First Architecture Baseline",
+    "Existing Runtime Baseline",
+    "P1-P6 detailed design"
+  ],
+  "pending_gates": [
+    "GOLDEN_CASE_E2E_REGRESSION",
+    "FINAL_VIDEO_QA",
+    "VIDEO_READY",
+    "V1_RELEASE_GATE_20_REAL_TASKS"
+  ],
+  "blocked": null,
+  "next_action": "RUN_GOLDEN_CASE_E2E_REGRESSION",
+  "golden_case": "为什么千兆宽带到了卧室只剩100M？",
+  "release_rule": "Remain RC until at least 20 real production tasks across multiple Domain Packs and at least 4 Golden Case classes pass the v1.0 Release Gate",
+  "source_projection": "Notion Video Factory Runtime State rev2",
+  "updated_at": "2026-09-09"
+}
