@@ -21,7 +21,7 @@ jobs:
           python-version: '3.12'
 
       - name: Runtime contract tests
-        run: python -m unittest discover -s tests -p 'test_runtime_contract.py' -v
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
 
       - name: Validate Video Factory canonical mirror
         run: python tools/runtime_contract.py validate --root . --manifest runtime-contract/video-factory.runtime-contract.json
