@@ -2,6 +2,9 @@
   "contract_version": "global-runtime-v1",
   "project": "XinZhao Video Factory",
   "profile": "canonical-v1",
+  "machine_authority": "git",
+  "canonical_repository": "mxonline/xinzhou-code-standard",
+  "canonical_runtime_root": "runtime-contract/instances/video-factory-v1-production-first",
   "bundles": [
     {
       "execution_id": "video-factory-v1-production-first",
@@ -12,7 +15,8 @@
   ],
   "projection_paths": [
     "Notion:P5 Resume Gate",
-    "Notion:GPT HANDOFF Status Index"
+    "Notion:GPT HANDOFF Status Index",
+    "Notion:Video Factory Runtime State/Events/Evidence pages"
   ],
   "executor_autowrite_verified": false
 }
