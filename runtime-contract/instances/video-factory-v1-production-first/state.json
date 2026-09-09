@@ -1,10 +1,13 @@
 {
   "schema_version": 1,
   "execution_id": "video-factory-v1-production-first",
-  "state_revision": 2,
+  "state_revision": 3,
   "status": "IN_PROGRESS",
   "runtime_contract_status": "VERIFIED",
   "runtime_contract_evidence_ref": "evidence:cold-recovery-run-07",
+  "machine_authority": "git",
+  "projection_role": "notion_handoff_projection_only",
+  "executor_autowrite_status": "NOT_VERIFIED",
   "current_stage": "GOLDEN_CASE_E2E_REGRESSION",
   "last_verified_stage": "EXISTING_RUNTIME_BASELINE",
   "video_status": "RC",
@@ -23,6 +26,10 @@
   "next_action": "RUN_GOLDEN_CASE_E2E_REGRESSION",
   "golden_case": "为什么千兆宽带到了卧室只剩100M？",
   "release_rule": "Remain RC until at least 20 real production tasks across multiple Domain Packs and at least 4 Golden Case classes pass the v1.0 Release Gate",
-  "source_projection": "Notion Video Factory Runtime State rev2",
+  "projection_targets": [
+    "Notion:P5 Resume Gate",
+    "Notion:GPT HANDOFF Status Index",
+    "Notion:Video Factory Runtime State/Events/Evidence pages"
+  ],
   "updated_at": "2026-09-09"
 }
