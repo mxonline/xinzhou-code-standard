@@ -46,6 +46,15 @@ class GlobalIntelligenceRouterTests(unittest.TestCase):
         self.assertEqual(text.count("XINZHAO:GLOBAL_INTELLIGENCE_ROUTER:BEGIN"), 1)
         self.assertEqual(text.count("XINZHAO:GLOBAL_INTELLIGENCE_ROUTER:END"), 1)
 
+    def test_canonical_source_makes_every_x_status_task_mandatory(self):
+        text = SOURCE_PATH.read_text(encoding="utf-8")
+        self.assertIn("Any task whose input or context contains an X/Twitter status URL is in scope", text)
+        self.assertIn("before any final response", text)
+        self.assertIn("Do not require the user to ask to save, persist, or write back", text)
+        self.assertIn("analysis, recommendations, topic selection, or partial conclusions", text)
+        self.assertIn("INTELLIGENCE_WRITEBACK_COMPLETE", text)
+        self.assertIn("BLOCKED", text)
+
     def test_installer_exposes_canonical_source(self):
         runtime = self.require_runtime()
         reader = self.require_callable(runtime, "canonical_block_source")
@@ -56,7 +65,8 @@ class GlobalIntelligenceRouterTests(unittest.TestCase):
         runtime = self.require_runtime()
         render = self.require_callable(runtime, "render_installed_agents")
         existing = "# My Rules\nKeep this line.\n"
-        rendered, status = render(existing, runtime.canonical_block_source())
+        block = runtime.canonical_block_source()
+        rendered, status = render(existing, block)
         self.assertEqual(status, "appended")
         self.assertTrue(rendered.startswith(existing))
         self.assertIn(runtime.BEGIN_MARKER, rendered)
