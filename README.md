@@ -24,6 +24,23 @@ Reuse Gate 固定输出 `USE / REUSE / FORK / BUILD` 之一，并检查许可证
 
 核心原则：用户提出需求后，由 ChatGPT 自动恢复项目状态、生成或恢复运行编号、读取 Notion 与 GitHub、生成或更新 PRD、调度 Codex / 可用开发工具、运行测试、处理失败和 CI、支持中断恢复、同步 Notion，并在正式发布前执行发布 Dry Run，不再逐步询问“下一步”。
 
+## Codex 全局外部情报回传
+
+本仓库提供 Codex 全局外部情报路由的受管 bootstrap 与安装器。完整业务规则仍以 Notion 的 `External Intelligence Writeback & Routing Contract v1.0` 为 Source of Truth。
+
+安装或更新 `$CODEX_HOME/AGENTS.md` 中的受管路由块：
+
+```bash
+python tools/install_codex_global_router.py
+python tools/install_codex_global_router.py --check
+```
+
+默认 `$CODEX_HOME` 为 `~/.codex`；可使用环境变量 `CODEX_HOME` 或 `--codex-home` 覆盖。安装器只维护 `XINZHAO:GLOBAL_INTELLIGENCE_ROUTER` 标记之间的内容，不覆盖其它全局规则；标记损坏时会 fail closed。
+
+安装器不会保存 OAuth 凭据，也不会自动改写 `config.toml`。`--check` 只报告 AGENTS 安装状态和 MCP/plugin 配置信号。Notion 工具不可读写、认证失败、写入失败或回读验证失败时，Codex 必须返回 `BLOCKED`，不能把聊天中的“分析完成”当成回传成功。
+
+真实验收必须新开一个 Codex 任务并粘贴一条真实提示词相关 X 链接。只有 Notion 外部情报库完成幂等写入、Global Intelligence HANDOFF 与目标 Project HANDOFF 都更新，并且回读验证一致后，任务才允许返回 `INTELLIGENCE_WRITEBACK_COMPLETE`。
+
 ## 通用核心流程
 
 需求识别 → GitHub / 官方生态检索 → Reuse Gate → 运行编号 → 项目文档与真实源码读取 → 影响范围判断 → PRD / 架构设计 → 开发实现 → 快速自动测试 → 故障恢复 → 风险驱动检查 → Git / CI → 文档同步 → 发布 Dry Run → 发布准备
