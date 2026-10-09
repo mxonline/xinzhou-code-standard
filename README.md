@@ -4,6 +4,14 @@
 
 目标：让 AI 辅助开发保持真实项目开发质量，同时优先保证开发效率、安全性和可维护性。
 
+## 跨会话恢复原则（2026-10-09）
+
+Codex/ChatGPT 新会话必须按正式 Project Router Registry 识别项目与 Source of Truth。已有机器 Runtime 时，先回读 State、Events、Evidence/Journal 和实际 Git/CI/产物，再检查该项目的 Notion HANDOFF。没有机器 Runtime 时沿用项目 HANDOFF 与正式文档；禁止建立通用第二套状态机或将聊天摘要当成 VERIFIED。
+
+在真实验收后的 checkpoint、外部阻断或主动结束长会话时，只更新原项目的轻量交接投影：项目/执行 ID、修订/HEAD、当前节点、已验证证据、首因/已试失败修复、唯一 next_action。不保存凭据、全文或二进制资产。交接不构成暂停点，不要求用户正常执行途中再次发“继续”。
+
+XinZhao Video Factory 例外规则：机器权威固定为 `runtime-contract/video-factory.runtime-contract.json` 指定的 Git State / Events / Evidence；P5/Notion 只作投影。Shot/Asset dependency hash、Golden Case、Final QA 与 VIDEO_READY 仍须真实验证。其 `executor_autowrite_verified=false` 不得因新增本说明改成 true。
+
 ## 开发前置 Reuse Gate
 
 所有适合检索官方方案、成熟开源项目、可复用组件或现有架构的开发任务，在进入 PRD / 架构设计和 Codex 实现前，默认先执行：
