@@ -24,7 +24,7 @@ Reuse Gate 固定输出 `USE / REUSE / FORK / BUILD` 之一，并检查许可证
 
 Codex / ChatGPT 开发任务在已登记项目的原 Phase、Runtime、Reuse Gate 内，采用：
 
-`codex/INTENT_TDD_EXECUTION.md`
+`codex/REUSE_GATE.md`
 
 要求：读取权威状态 → 固定需求与验收条件 → 可执行的 RED / 最小 GREEN / 回归 → 失败定向修复 → 真实终态回读。只复用现有状态与证据，不新增通用 Phase、Gate、Runtime、人工暂停点或自动发布权限。实施前阶段只产出可审查验收案例，不冒充已运行测试。
 
