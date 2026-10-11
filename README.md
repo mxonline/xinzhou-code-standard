@@ -20,6 +20,14 @@ XinZhao Video Factory 例外规则：机器权威固定为 `runtime-contract/vid
 
 Reuse Gate 固定输出 `USE / REUSE / FORK / BUILD` 之一，并检查许可证、维护状态、CI / 测试、安全、依赖健康度、技术栈与运行环境兼容性、二次开发成本和长期维护成本。Star 数仅作为辅助信号，不代替维护与兼容性判断。
 
+## 意图对齐与测试驱动执行契约（2026-10-12）
+
+Codex / ChatGPT 开发任务在已登记项目的原 Phase、Runtime、Reuse Gate 内，采用：
+
+`codex/REUSE_GATE.md`
+
+要求：读取权威状态 → 固定需求与验收条件 → 可执行的 RED / 最小 GREEN / 回归 → 失败定向修复 → 真实终态回读。只复用现有状态与证据，不新增通用 Phase、Gate、Runtime、人工暂停点或自动发布权限。实施前阶段只产出可审查验收案例，不冒充已运行测试。
+
 ## Z-Blog 插件默认流程
 
 所有 Z-Blog PHP 插件开发、升级、修复、优化和重构任务，默认执行：
